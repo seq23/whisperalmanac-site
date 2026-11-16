@@ -1,0 +1,9 @@
+{
+  "name": "whisperalmanac-site",
+  "compatibility_date": "2026-11-01",
+  "assets": { "directory": "./public" },
+  "routes": [
+    { "pattern": "whisperalmanac.com", "custom_domain": true },
+    { "pattern": "www.whisperalmanac.com", "custom_domain": true }
+  ]
+}
