@@ -15,6 +15,9 @@
 //     (og:image 1200x630), so nothing shifts and no preview card comes up empty
 //   - nothing on a page is blocked by the Content-Security-Policy in _headers
 //     (no inline style, no executable script, no other origin's files)
+//   - Cloudflare Web Analytics (injected at the edge) is allowed by that CSP,
+//     so visits are counted and the console stays clean
+//   - every page's footer carries a private contact (a mailto: link)
 //   - every JSON-LD block parses
 // Rule 0: zero pages examined is a failure, never a pass.
 // Usage: node scripts/validate-site.mjs [siteRoot]   (siteRoot defaults to repo root)
@@ -138,6 +141,11 @@ const headersPath = join(pub, '_headers');
 const headers = existsSync(headersPath) ? readFileSync(headersPath, 'utf8') : '';
 const csp = (headers.match(/^\s+Content-Security-Policy:\s*(.+)$/m) || [])[1] || '';
 if (!/^\/\*\s*$/m.test(headers) || !csp) problems.push('public/_headers sets no Content-Security-Policy for /*');
+// Cloudflare injects its Web Analytics beacon into every page at the edge: a CSP that does
+// not allow it blocks the script (a console error on every load) and no visit is counted.
+const directive = (name) => ((csp.match(new RegExp(`(?:^|;)\\s*${name}\\s+([^;]*)`)) || [])[1] || '').split(/\s+/);
+if (csp && !directive('script-src').includes('https://static.cloudflareinsights.com')) problems.push('CSP script-src does not allow the Cloudflare Web Analytics beacon (https://static.cloudflareinsights.com)');
+if (csp && !directive('connect-src').includes('https://cloudflareinsights.com')) problems.push('CSP connect-src does not let the analytics beacon report (https://cloudflareinsights.com)');
 for (const h of ['Strict-Transport-Security', 'X-Content-Type-Options']) if (!new RegExp(`^\\s+${h}:`, 'm').test(headers)) problems.push(`public/_headers is missing ${h}`);
 
 let images = 0;
@@ -147,6 +155,8 @@ for (const page of pages) {
   if (!/<meta name="viewport" content="width=device-width/.test(html)) problems.push(`${rel}: no viewport meta (a phone would render it at desktop width)`);
   if (!/<link rel="stylesheet" href="\/site\.css">/.test(html)) problems.push(`${rel}: does not load /site.css`);
   if (!/<link rel="icon" href="\/[^"]+"/.test(html)) problems.push(`${rel}: no favicon`);
+  const footer = (html.match(/<footer>([\s\S]*?)<\/footer>/) || [])[1] || '';
+  if (!/href="mailto:[^"@]+@whisperalmanac\.com"/.test(footer)) problems.push(`${rel}: footer has no private contact (a mailto: link to a whisperalmanac.com address)`);
   if (csp) {
     if (/<style[\s>]/i.test(html) || /\sstyle="/i.test(html)) problems.push(`${rel}: inline style, which the CSP (style-src 'self') blocks`);
     for (const [tag] of html.matchAll(/<script\b[^>]*>/gi)) if (!/type="application\/ld\+json"/.test(tag)) problems.push(`${rel}: executable <script>, which the CSP (no script-src) blocks`);
