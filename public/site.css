@@ -1,0 +1,23 @@
+/* Whisper Almanac: one candle in a dark room (brand approved 6 Nov 2026). Dark only. */
+@font-face{font-family:"DM Serif Display";font-style:italic;font-weight:400;font-display:swap;src:url(/fonts/dm-serif-display-italic.woff2) format("woff2")}
+@font-face{font-family:Jost;font-style:normal;font-weight:300;font-display:swap;src:url(/fonts/jost-300.woff2) format("woff2")}
+@font-face{font-family:Jost;font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/jost-400.woff2) format("woff2")}
+:root{--candle-dark:#120E0B;--beeswax:#F3E6CF;--ember:#E89B4C;--glow:#3A2616;--soft:#D2C3A8;color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100vh;background:var(--candle-dark) radial-gradient(ellipse 80% 60% at 50% 18%,var(--glow) 0%,var(--candle-dark) 70%) no-repeat;color:var(--beeswax);font:300 1.0625rem/1.65 Jost,system-ui,sans-serif}
+main{max-width:40rem;margin:0 auto;padding:3.5rem 1rem 2.5rem}
+.mark{display:inline-block;position:relative;margin:0;font:400 italic clamp(2.4rem,11vw,4rem)/1.1 "DM Serif Display",Georgia,serif;letter-spacing:-.01em;color:var(--beeswax);text-decoration:none;padding-top:.35em}
+.mark svg{position:absolute;right:.02em;top:0;width:.32em;height:.5em;filter:drop-shadow(0 0 .18em rgba(232,155,76,.55))}
+.lede{margin:.4rem 0 0;font-weight:400;font-size:1.25rem;color:var(--beeswax)}
+.tagline{margin:.25rem 0 1.75rem;color:var(--soft)}
+p,li{color:var(--soft)}
+a{color:var(--ember);text-underline-offset:.18em}
+figure{margin:0 0 1.75rem}
+figure img{display:block;width:100%;height:auto;aspect-ratio:16/9;border-radius:.75rem;background:var(--glow)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:3rem;margin:.75rem 0 0;padding:.75rem 1.75rem;border-radius:999px;background:var(--ember);color:var(--candle-dark);font-weight:400;font-size:1.0625rem;text-decoration:none}
+.btn:hover,.btn:focus-visible{background:#F0AC66}
+.btn:focus-visible,a:focus-visible{outline:2px solid var(--beeswax);outline-offset:3px}
+h2{margin:2rem 0 .5rem;font-weight:400;font-size:1.25rem;color:var(--beeswax)}
+footer{margin-top:3.5rem;font-size:.9375rem;color:var(--soft)}
+footer a{display:inline-block;padding:.6rem 0}
