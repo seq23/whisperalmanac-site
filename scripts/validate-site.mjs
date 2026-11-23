@@ -203,6 +203,9 @@ if (!existsSync(privacy)) {
   const linksToPolicy = [...html.matchAll(/href="([^"]*)"/g)].some(([, href]) => href === POLICY);
   if (!linksToPolicy) problems.push('privacy page lost its link to the Google API Services User Data Policy');
   if (!/Limited Use/.test(html)) problems.push('privacy page lost its Limited Use statement');
+  // the CSP lets Cloudflare's beacon count visits, so the policy names it (risk brain, 10 Nov 2026: an analytics tool is named on the privacy page)
+  if (directive('script-src').has('https://static.cloudflareinsights.com') && !(/Cloudflare Web Analytics/.test(html) && /href="https:\/\/www\.cloudflare\.com\/privacypolicy\/?"/.test(html)))
+    problems.push('privacy page does not name Cloudflare Web Analytics (with a link to its privacy policy) though the CSP lets its beacon count visits');
 }
 
 if (problems.length) {
