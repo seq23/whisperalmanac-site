@@ -160,6 +160,9 @@ for (const page of pages) {
   if (!/<link rel="icon" href="\/[^"]+"/.test(html)) problems.push(`${rel}: no favicon`);
   const footer = (html.match(/<footer>([\s\S]*?)<\/footer>/) || [])[1] || '';
   if (!/href="mailto:[^"@]+@whisperalmanac\.com"/.test(footer)) problems.push(`${rel}: footer has no private contact (a mailto: link to a whisperalmanac.com address)`);
+  // whole items in a wrapping list, never text separators: at 390 px a typed ' · ' ended a line on its own (review sr_mwtc1egagdy9)
+  const loose = footer.replace(/<li>[\s\S]*?<\/li>/g, '').replace(/<\/?ul>/g, '').trim();
+  if (!/<li>/.test(footer) || loose || /[·|•]/.test(footer)) problems.push(`${rel}: footer items must each sit in their own list item, with no typed separator (found: ${(loose || footer.match(/.{0,20}[·|•].{0,20}/)?.[0] || 'no list').slice(0, 60)})`);
   if (csp) {
     if (/<style[\s>]/i.test(html) || /\sstyle="/i.test(html)) problems.push(`${rel}: inline style, which the CSP (style-src 'self') blocks`);
     for (const [tag] of html.matchAll(/<script\b[^>]*>/gi)) if (!/type="application\/ld\+json"/.test(tag)) problems.push(`${rel}: executable <script>, which the CSP (no script-src) blocks`);
