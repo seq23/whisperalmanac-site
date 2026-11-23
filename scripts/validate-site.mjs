@@ -19,6 +19,7 @@
 //     so visits are counted and the console stays clean
 //   - every page's footer carries a private contact (a mailto: link)
 //   - every JSON-LD block parses
+//   - one address per page: redirect Worker first, canonical tags, sitemap.xml + robots.txt
 // Rule 0: zero pages examined is a failure, never a pass.
 // Usage: node scripts/validate-site.mjs [siteRoot]   (siteRoot defaults to repo root)
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
@@ -166,7 +167,8 @@ for (const page of pages) {
   if (csp) {
     if (/<style[\s>]/i.test(html) || /\sstyle="/i.test(html)) problems.push(`${rel}: inline style, which the CSP (style-src 'self') blocks`);
     for (const [tag] of html.matchAll(/<script\b[^>]*>/gi)) if (!/type="application\/ld\+json"/.test(tag)) problems.push(`${rel}: executable <script>, which the CSP (no script-src) blocks`);
-    for (const [, url] of html.matchAll(/<(?:img|source|link)\b[^>]*?(?:src|href)="(https?:[^"]+)"/gi)) problems.push(`${rel}: loads ${url} from another origin, which the CSP blocks`);
+    // rel="canonical" names the page's address; the browser loads nothing from it.
+    for (const [tag, url] of html.matchAll(/<(?:img|source|link)\b[^>]*?(?:src|href)="(https?:[^"]+)"[^>]*>/gi)) if (!/\brel="canonical"/.test(tag)) problems.push(`${rel}: loads ${url} from another origin, which the CSP blocks`);
   }
   for (const [, json] of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
     try { JSON.parse(json); } catch (e) { problems.push(`${rel}: JSON-LD does not parse: ${e.message}`); }
@@ -206,6 +208,27 @@ if (!existsSync(privacy)) {
   // the CSP lets Cloudflare's beacon count visits, so the policy names it (risk brain, 10 Nov 2026: an analytics tool is named on the privacy page)
   if (directive('script-src').has('https://static.cloudflareinsights.com') && !(/Cloudflare Web Analytics/.test(html) && /href="https:\/\/www\.cloudflare\.com\/privacypolicy\/?"/.test(html)))
     problems.push('privacy page does not name Cloudflare Web Analytics (with a link to its privacy policy) though the CSP lets its beacon count visits');
+}
+
+// One address per page: the redirect Worker runs first, every indexable page names its https
+// bare-domain URL as canonical, and sitemap.xml (linked from robots.txt) lists exactly those pages.
+{
+  let cfg = {};
+  try { cfg = JSON.parse(readFileSync(wranglerPath, 'utf8').replace(/^\s*\/\/.*$/gm, '')); } catch {}
+  if (!cfg.main || !existsSync(join(root, cfg.main))) problems.push('wrangler.jsonc has no "main" redirect Worker (http and www would serve duplicates)');
+  if (cfg.assets?.run_worker_first !== true) problems.push('wrangler.jsonc assets.run_worker_first is not true (assets would answer before the redirect)');
+  if (cfg.observability?.enabled !== true) problems.push('wrangler.jsonc observability is off (Worker errors would not be kept)');
+  const indexable = pages.filter((p) => !p.endsWith('404.html')).map((p) => 'https://whisperalmanac.com/' + relative(pub, p).replace(/index\.html$/, ''));
+  for (const page of pages.filter((p) => !p.endsWith('404.html'))) {
+    const want = 'https://whisperalmanac.com/' + relative(pub, page).replace(/index\.html$/, '');
+    const got = readFileSync(page, 'utf8').match(/<link rel="canonical" href="([^"]+)">/)?.[1];
+    if (got !== want) problems.push(`${relative(pub, page)}: canonical is ${got || 'missing'}, expected ${want}`);
+  }
+  const sitemap = existsSync(join(pub, 'sitemap.xml')) ? readFileSync(join(pub, 'sitemap.xml'), 'utf8') : '';
+  const listed = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]).sort();
+  if (JSON.stringify(listed) !== JSON.stringify([...indexable].sort())) problems.push(`sitemap.xml lists [${listed}] but the pages are [${indexable.sort()}]`);
+  const robots = existsSync(join(pub, 'robots.txt')) ? readFileSync(join(pub, 'robots.txt'), 'utf8') : '';
+  if (!/^Sitemap: https:\/\/whisperalmanac\.com\/sitemap\.xml$/m.test(robots)) problems.push('robots.txt does not point at https://whisperalmanac.com/sitemap.xml');
 }
 
 if (problems.length) {
