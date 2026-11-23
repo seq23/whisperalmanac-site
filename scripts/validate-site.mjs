@@ -69,7 +69,10 @@ if (!existsSync(privacy)) {
   problems.push('privacy/index.html is missing (Google OAuth consent screen links to it)');
 } else {
   const html = readFileSync(privacy, 'utf8');
-  if (!html.includes('https://developers.google.com/terms/api-services-user-data-policy')) problems.push('privacy page lost its link to the Google API Services User Data Policy');
+  // An exact href, not a substring: the policy URL must be a link, not words on the page.
+  const POLICY = 'https://developers.google.com/terms/api-services-user-data-policy';
+  const linksToPolicy = [...html.matchAll(/href="([^"]*)"/g)].some(([, href]) => href === POLICY);
+  if (!linksToPolicy) problems.push('privacy page lost its link to the Google API Services User Data Policy');
   if (!/Limited Use/.test(html)) problems.push('privacy page lost its Limited Use statement');
 }
 

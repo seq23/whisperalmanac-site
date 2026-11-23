@@ -5,6 +5,9 @@ on:
   pull_request:
   push:
     branches: [main]
+# Read-only token: this job only validates.
+permissions:
+  contents: read
 jobs:
   validate:
     runs-on: ubuntu-latest
