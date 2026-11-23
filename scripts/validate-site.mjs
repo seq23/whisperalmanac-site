@@ -147,6 +147,8 @@ if (!/^\/\*\s*$/m.test(headers) || !csp) problems.push('public/_headers sets no 
 const directive = (name) => new Set(((csp.match(new RegExp(`(?:^|;)\\s*${name}\\s+([^;]*)`)) || [])[1] || '').split(/\s+/));
 if (csp && !directive('script-src').has('https://static.cloudflareinsights.com')) problems.push('CSP script-src does not allow the Cloudflare Web Analytics beacon (https://static.cloudflareinsights.com)');
 if (csp && !directive('connect-src').has('https://cloudflareinsights.com')) problems.push('CSP connect-src does not let the analytics beacon report (https://cloudflareinsights.com)');
+// on a proxied zone the beacon reports to the site's own /cdn-cgi/rum (seen on production 23 Nov 2026)
+if (csp && !directive('connect-src').has("'self'")) problems.push("CSP connect-src does not let the analytics beacon report to this site's own /cdn-cgi/rum ('self')");
 for (const h of ['Strict-Transport-Security', 'X-Content-Type-Options']) if (!new RegExp(`^\\s+${h}:`, 'm').test(headers)) problems.push(`public/_headers is missing ${h}`);
 
 let images = 0;
