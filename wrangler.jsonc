@@ -1,7 +1,12 @@
 {
   "name": "whisperalmanac-site",
   "compatibility_date": "2026-11-01",
-  "assets": { "directory": "./public", "not_found_handling": "404-page" },
+  // src/index.js runs first on every request: http and www redirect to https://whisperalmanac.com.
+  "main": "src/index.js",
+  "assets": { "directory": "./public", "binding": "ASSETS", "not_found_handling": "404-page", "run_worker_first": true },
+  // Errors after launch reach us: Worker logs and exceptions are kept in Cloudflare (Workers > Logs).
+  // The pages run no first-party JavaScript, so there is no browser error beacon to add.
+  "observability": { "enabled": true },
   "routes": [
     { "pattern": "whisperalmanac.com", "custom_domain": true },
     { "pattern": "www.whisperalmanac.com", "custom_domain": true }
