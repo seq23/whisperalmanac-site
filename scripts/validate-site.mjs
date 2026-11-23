@@ -143,9 +143,10 @@ const csp = (headers.match(/^\s+Content-Security-Policy:\s*(.+)$/m) || [])[1] ||
 if (!/^\/\*\s*$/m.test(headers) || !csp) problems.push('public/_headers sets no Content-Security-Policy for /*');
 // Cloudflare injects its Web Analytics beacon into every page at the edge: a CSP that does
 // not allow it blocks the script (a console error on every load) and no visit is counted.
-const directive = (name) => ((csp.match(new RegExp(`(?:^|;)\\s*${name}\\s+([^;]*)`)) || [])[1] || '').split(/\s+/);
-if (csp && !directive('script-src').includes('https://static.cloudflareinsights.com')) problems.push('CSP script-src does not allow the Cloudflare Web Analytics beacon (https://static.cloudflareinsights.com)');
-if (csp && !directive('connect-src').includes('https://cloudflareinsights.com')) problems.push('CSP connect-src does not let the analytics beacon report (https://cloudflareinsights.com)');
+// An exact source token (a Set of the directive's tokens), never a substring of the policy.
+const directive = (name) => new Set(((csp.match(new RegExp(`(?:^|;)\\s*${name}\\s+([^;]*)`)) || [])[1] || '').split(/\s+/));
+if (csp && !directive('script-src').has('https://static.cloudflareinsights.com')) problems.push('CSP script-src does not allow the Cloudflare Web Analytics beacon (https://static.cloudflareinsights.com)');
+if (csp && !directive('connect-src').has('https://cloudflareinsights.com')) problems.push('CSP connect-src does not let the analytics beacon report (https://cloudflareinsights.com)');
 for (const h of ['Strict-Transport-Security', 'X-Content-Type-Options']) if (!new RegExp(`^\\s+${h}:`, 'm').test(headers)) problems.push(`public/_headers is missing ${h}`);
 
 let images = 0;
