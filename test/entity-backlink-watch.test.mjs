@@ -30,7 +30,7 @@ test('a profile dead once is kept and named; dead two runs running it is dropped
   const first = decide(entity, results, null);
   assert.deepEqual(first.sameAs, [YT, X]);
   assert.equal(first.changed, false);
-  assert.ok(first.stops.some((s) => s.includes('PROFILE_DEAD_ONCE') && s.includes(X)));
+  assert.ok(first.stops.includes(`NAMED STOP [PROFILE_DEAD_ONCE] ${X} answered 404; dropped if it is dead again next run`));
   const second = decide(entity, results, { profiles: [{ url: X, dead: true }] });
   assert.deepEqual(second.sameAs, [YT]);
   assert.deepEqual(second.removed, [X]);
@@ -54,7 +54,7 @@ test('a pending profile that resolves and links back is promoted; a live profile
   assert.deepEqual(d.sameAs, [YT, X, P]);
   assert.deepEqual(d.promoted, [P]);
   assert.deepEqual(d.profiles_pending, []);
-  assert.ok(d.stops.some((s) => s.includes('NO_LINK_BACK') && s.includes(YT)));
+  assert.ok(d.stops.includes(`NAMED STOP [NO_LINK_BACK] ${YT} resolves but does not link to https://whisperalmanac.com/; add the site to that profile's links`));
 });
 
 test('rewritePage leaves every real page byte for byte when sameAs is unchanged, and follows a change', () => {
