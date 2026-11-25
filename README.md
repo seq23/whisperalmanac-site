@@ -12,6 +12,7 @@ Workflows beside CI:
 - `search-console-daily.yml` (daily): `scripts/search-console.mjs` writes and commits query truth, query history, URL inspection coverage and sitemap submission status under `data/search-console/`. The workflow uses the `GSC_SERVICE_ACCOUNT_JSON` Actions secret for the service account that has access to the site's Search Console property.
 - `post-deploy-live-check.yml` (after each push to main, and daily): `scripts/live-check.mjs` waits for the deploy, then reads what the edge serves.
 - `weekly-outcome-report.yml` (Mondays): `scripts/weekly-outcome-report.mjs`, week over week from `data/search-console/`, with one self-closing issue while the site is red.
+- `entity-backlink-watch.yml` (Wednesdays and when entity configuration changes): checks the public profiles, records missing links in `reports/entity/backlink_watch.json`, and promotes pending profiles when they link to this site.
 - Nothing paid: `config/llm_routing.json`, `scripts/lib/llm-router.mjs`, `docs/cost/zero-paid-llm.md`.
 
 IndexNow: the key is `public/<key>.txt` (its body is its own name). `.github/workflows/indexnow.yml` runs `scripts/indexnow-ping.mjs` on every push to main: it waits until the live site serves that commit, then pings the changed pages.

@@ -1,0 +1,21 @@
+{
+  "checked_at": "2026-11-25T06:19:24.261Z",
+  "host": "whisperalmanac.com",
+  "examined": 1,
+  "profiles": [
+    {
+      "url": "https://www.youtube.com/@whisperalmanac",
+      "kind": "sameAs",
+      "status": 200,
+      "final_url": "https://www.youtube.com/@whisperalmanac/about",
+      "linksBack": false,
+      "dead": false
+    }
+  ],
+  "removed": [],
+  "promoted": [],
+  "applied": false,
+  "stops": [
+    "NAMED STOP [NO_LINK_BACK] https://www.youtube.com/@whisperalmanac resolves but does not link to https://whisperalmanac.com/; add the site to that profile's links"
+  ]
+}

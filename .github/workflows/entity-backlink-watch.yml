@@ -1,0 +1,52 @@
+name: Entity Backlink Watch
+
+# Weekly (Search Readiness k6): profiles die, get renamed or stop linking back, and nothing noticed.
+# scripts/entity-backlink-watch.mjs fetches every sameAs and pending profile in config/entity.json:
+#   - a profile dead (404/410/no DNS) two runs running is dropped from sameAs, and a pending profile
+#     that now resolves and links back is promoted; every page's Organization JSON-LD is rewritten to match, the site
+#     validator must pass on the result, and only then does it reach main. Deploy stays the manual
+#     wrangler step (README); post-deploy-live-check.yml stops red until the edge serves it.
+#   - a profile that does not link back is a NAMED STOP in the job summary and in
+#     reports/entity/backlink_watch.json, which lands on main each week as the watch's evidence. It
+#     keeps the run green: the fix is on the profile, not a broken watch.
+# Also runs when the identity or the watch itself changes on main, so a new profile is checked at once.
+on:
+  schedule:
+    # Wednesdays 14:41 UTC, off the hour and away from the Monday report and the daily collectors.
+    - cron: "41 14 * * 3"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - config/entity.json
+      - scripts/entity-backlink-watch.mjs
+      - .github/workflows/entity-backlink-watch.yml
+permissions:
+  contents: write
+concurrency:
+  group: entity-backlink-watch
+  cancel-in-progress: false
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Prove the self-heal rules before trusting them
+        run: node --test test/entity-backlink-watch.test.mjs
+      - name: Check every profile
+        run: node scripts/entity-backlink-watch.mjs --apply
+      - name: A self-heal must leave the site valid
+        run: node scripts/validate-site.mjs
+      - name: Land the week's evidence (and any self-heal) on main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/entity config/entity.json public
+          git diff --cached --quiet && { echo "NAMED NOTE [NO_CHANGE] nothing new to commit"; exit 0; }
+          git commit -q -m "entity backlink watch: weekly evidence"
+          for i in 1 2 3; do git pull -q --rebase origin main && git push -q origin HEAD:main && exit 0; sleep 10; done
+          echo "NAMED STOP [PUSH_FAILED] could not push reports/entity after 3 tries"; exit 1
