@@ -1,0 +1,23 @@
+{
+ "property": "sc-domain:whisperalmanac.com",
+ "generated_at": "2026-11-25T06:12:38.446Z",
+ "sitemap": [
+  {
+   "path": "https://whisperalmanac.com/sitemap.xml",
+   "lastSubmitted": "2026-11-25T04:32:54.165Z",
+   "isPending": false,
+   "isSitemapsIndex": false,
+   "type": "sitemap",
+   "lastDownloaded": "2026-11-25T04:32:54.693Z",
+   "warnings": "0",
+   "errors": "0",
+   "contents": [
+    {
+     "type": "web",
+     "submitted": "2",
+     "indexed": "0"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0.0",
+  "owner_policy": {
+    "quote": "nothing should be paid",
+    "doc": "docs/cost/zero-paid-llm.md"
+  },
+  "policy": {
+    "max_cost_usd": 0,
+    "paid_fallback": false,
+    "on_reported_cost": "NAMED STOP [PAID_MODEL]: a response with a non-zero usage.cost stops the run",
+    "read_by": "scripts/lib/llm-router.mjs (the only door to a model; nothing in this repository calls one today)"
+  },
+  "pricing_snapshot": {
+    "date": "2026-11-06",
+    "source": "https://openrouter.ai/api/v1/models (no key)",
+    "filter": "pricing.prompt == \"0\" && pricing.completion == \"0\""
+  },
+  "models": [
+    { "id": "google/gemma-4-31b-it:free" },
+    { "id": "google/gemma-4-26b-a4b-it:free" },
+    { "id": "nvidia/nemotron-3-ultra-550b-a55b:free" },
+    { "id": "nvidia/nemotron-3.5-lightning:free" }
+  ]
+}
