@@ -1,0 +1,33 @@
+name: Post-deploy live check
+
+# Search Readiness h4: after each push to main, wait (bounded, 30 min) until whisperalmanac.com serves
+# this commit's public/ files byte for byte (deploy is a manual wrangler step, see README), then read
+# what the edge really serves: crawl files, icons, og image, homepage schema types and entity,
+# IndexNow key, http/www redirects and a real 404 (scripts/live-check.mjs). Daily too, without the
+# wait, so drift at the edge between deploys is caught. Read-only.
+on:
+  push:
+    branches: [main]
+    paths: ['public/**', 'src/**', 'wrangler.jsonc', 'config/entity.json', 'scripts/live-check.mjs']
+  schedule:
+    - cron: "41 12 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: post-deploy-live-check
+  cancel-in-progress: true
+jobs:
+  live-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Live check (after the deploy of this commit, on a push)
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT" = "push" ]; then node scripts/live-check.mjs --wait; else node scripts/live-check.mjs; fi

@@ -1,0 +1,51 @@
+name: Weekly outcome report
+
+# Search Readiness i9: "Without a report nobody notices a drop for a month. Without self-closing
+# issues the list rots." Mondays, from what search-console-daily.yml collected
+# (data/search-console/). Nothing here emails (the 1 Nov 2026 ruling on the grid's weekly reports:
+# Boss OS sends the one Spry Labs weekly email). The report goes up as the step summary and the
+# weekly-outcome-report artifact; one issue is opened while the site is red, updated while it stays
+# red and closed by the first run that is not. It writes nothing back into the repo.
+on:
+  schedule:
+    - cron: "40 13 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: weekly-outcome-report
+  cancel-in-progress: false
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Week over week from the Search Console files
+        env:
+          REPORT_OUT: ${{ runner.temp }}/weekly-outcome-report.json
+        run: node scripts/weekly-outcome-report.mjs | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Keep the report
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-outcome-report
+          path: ${{ runner.temp }}/weekly-outcome-report.json
+          if-no-files-found: error
+      - name: One self-closing issue while the site is red
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPORT: ${{ runner.temp }}/weekly-outcome-report.json
+        run: |
+          title="Weekly outcome: whisperalmanac.com is red"
+          verdict=$(jq -r '.verdict' "$REPORT")
+          open=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[0].number // empty')
+          if [ "$verdict" = "red" ]; then
+            body=$(jq -r '"Week ending " + (.week.end // "n/a") + "\n\n" + (.reasons | map("- " + .) | join("\n")) + "\n\n" + .summary + "\n\nFrom data/search-console/. Closes itself on the first weekly run that is no longer red."' "$REPORT")
+            if [ -n "$open" ]; then gh issue edit "$open" --body "$body"; else gh issue create --title "$title" --body "$body"; fi
+          elif [ -n "$open" ]; then
+            gh issue close "$open" --comment "$(jq -r '"No longer red: " + .summary' "$REPORT")"
+          fi
