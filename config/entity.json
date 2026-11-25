@@ -1,0 +1,16 @@
+{
+  "$comment": "The one definition of this site's identity (Search Readiness k1, k4). The pages are hand-written HTML, so scripts/validate-site.mjs holds every page's Organization node in its JSON-LD to this file: name, url, logo, sameAs and parentOrganization must match it exactly, or CI fails. sameAs lists only profiles that resolve now; anything not yet claimed goes in profiles_pending.",
+  "@id": "https://whisperalmanac.com/#org",
+  "name": "Whisper Almanac",
+  "url": "https://whisperalmanac.com/",
+  "logo": "https://whisperalmanac.com/icon-512.png",
+  "description": "Whispered ASMR for sleep on YouTube: guided manifesting meditations, money affirmations and slow, sleepy history and science.",
+  "sameAs": ["https://www.youtube.com/@whisperalmanac"],
+  "parentOrganization": {
+    "@type": "Organization",
+    "@id": "https://billionairehighperformancecoach.com/spry-labs#organization",
+    "name": "Spry Labs",
+    "url": "https://billionairehighperformancecoach.com/spry-labs"
+  },
+  "profiles_pending": []
+}

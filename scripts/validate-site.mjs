@@ -267,6 +267,25 @@ if (!existsSync(privacy)) {
   if (keys.length !== 1) problems.push(`expected exactly one IndexNow key file (public/<key>.txt holding its own key), found ${keys.length}`);
 }
 
+// One identity (briefs k1, k4, 24 Nov 2026): config/entity.json is the definition, and every page's
+// Organization node says exactly what it says, so a hand edit to one page cannot drift the brand apart.
+{
+  let entity = null;
+  try { entity = JSON.parse(readFileSync(join(root, 'config', 'entity.json'), 'utf8')); } catch (e) { problems.push(`config/entity.json is missing or does not parse (${e.message})`); }
+  const SPRY_LABS = 'https://billionairehighperformancecoach.com/spry-labs#organization';
+  if (entity) {
+    if (!entity.name || !Array.isArray(entity.sameAs) || !entity.sameAs.length) problems.push('config/entity.json needs a name and a non-empty sameAs list');
+    if (entity.parentOrganization?.['@id'] !== SPRY_LABS) problems.push(`config/entity.json parentOrganization is not Spry Labs (${SPRY_LABS})`);
+    const pick = (n) => JSON.stringify({ id: n['@id'], name: n.name, url: n.url, logo: n.logo, sameAs: n.sameAs, parent: n.parentOrganization?.['@id'] });
+    for (const page of pages.filter((p) => !p.endsWith('404.html'))) {
+      const nodes = [...readFileSync(page, 'utf8').matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].flatMap(([, j]) => { try { const d = JSON.parse(j); return d['@graph'] ?? [d]; } catch { return []; } });
+      const org = nodes.find((n) => n['@type'] === 'Organization' && n['@id'] === entity['@id']);
+      if (!org) problems.push(`${relative(pub, page)}: no Organization ${entity['@id']} in its JSON-LD`);
+      else if (pick(org) !== pick(entity)) problems.push(`${relative(pub, page)}: Organization differs from config/entity.json (page ${pick(org)}, entity ${pick(entity)})`);
+    }
+  }
+}
+
 if (problems.length) {
   for (const p of problems) console.error(`VALIDATE_SITE FAIL: ${p}`);
   process.exit(1);
