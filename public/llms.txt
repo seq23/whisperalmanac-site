@@ -4,4 +4,5 @@
 
 - [Home](https://whisperalmanac.com/): what the channel is and where to watch it
 - [YouTube channel](https://www.youtube.com/@whisperalmanac): every video
+- [About](https://whisperalmanac.com/about/): who makes the channel, how each video is voiced, and how AI use is disclosed
 - [Privacy policy](https://whisperalmanac.com/privacy/): the website and the Whisper Almanac Uploader
