@@ -7,9 +7,8 @@
 // 1. The key is the one public/<key>.txt whose body is its own name (IndexNow's contract).
 // 2. Changed public/**/index.html files become their URLs; none given (or none that are pages)
 //    means every URL in public/sitemap.xml.
-// 3. It waits until the live site serves this commit: the key file answers with the key AND the
-//    live sitemap.xml is byte-identical to the repo's. Deploy is a manual wrangler step (README), so
-//    it polls for up to WAIT_MINUTES; a deploy that never comes is a skipped ping, said out loud.
+// 3. Wait until the key, sitemap and pages being submitted match the worktree. A page-only edit
+//    can leave the sitemap unchanged. The deploy is a separate step, so the wait is bounded.
 // 4. One POST to api.indexnow.org. 200 or 202 is success; anything else fails the job.
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -33,19 +32,29 @@ const changed = process.argv.slice(2)
 const urlList = changed.length ? changed : all;
 
 const live = async (path) => {
-  const r = await fetch(`https://${HOST}${path}?indexnow=${Date.now()}`, { headers: { 'cache-control': 'no-cache' } }).catch(() => null);
+  const r = await fetch(`https://${HOST}${path}?indexnow=${Date.now()}`, {
+    redirect: 'manual', headers: { 'cache-control': 'no-cache' }, signal: AbortSignal.timeout(15000),
+  }).catch(() => null);
   return r?.ok ? r.text() : null;
 };
+const pages = urlList.map((url) => {
+  const path = new URL(url).pathname;
+  return [path, readFileSync(join(pub, path, 'index.html'), 'utf8')];
+});
 const deadline = Date.now() + WAIT_MINUTES * 60_000;
 for (;;) {
   const [k, s] = await Promise.all([live(`/${key}.txt`), live('/sitemap.xml')]);
-  if (k?.trim() === key && s === sitemap) break;
-  if (Date.now() > deadline) { console.log(`INDEXNOW SKIPPED: this commit was not live after ${WAIT_MINUTES} min (key ${k?.trim() === key ? 'served' : 'not served'}, sitemap ${s === sitemap ? 'current' : 'not current'}); nothing pinged`); process.exit(0); }
+  if (k?.trim() === key && s === sitemap) {
+    const published = await Promise.all(pages.map(async ([path, html]) => (await live(path)) === html));
+    if (published.every(Boolean)) break;
+  }
+  if (Date.now() > deadline) { console.error(`NAMED STOP [DEPLOY_NOT_LIVE] IndexNow received no URLs after a ${WAIT_MINUTES}-minute wait for the deployment`); process.exit(2); }
   await new Promise((r) => setTimeout(r, 30_000));
 }
 
 const res = await fetch('https://api.indexnow.org/indexnow', {
   method: 'POST', headers: { 'content-type': 'application/json; charset=utf-8' },
+  signal: AbortSignal.timeout(15000),
   body: JSON.stringify({ host: HOST, key, keyLocation, urlList }),
 });
 if (res.status !== 200 && res.status !== 202) { console.error(`INDEXNOW FAIL: ${res.status} ${(await res.text()).slice(0, 200)}`); process.exit(1); }
