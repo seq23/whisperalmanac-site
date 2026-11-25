@@ -51,11 +51,12 @@ export function build() {
   const cov = missing.length ? null : read('index_coverage.json');
   const { week, prev } = weeks(truth?.by_date ?? []);
   const states = cov?.states ?? {};
-  const indexed = states['Submitted and indexed'] ?? 0;
-  const notIndexed = Object.entries(states).filter(([k]) => k !== 'Submitted and indexed').reduce((n, [, v]) => n + v, 0);
+  const inspected = Object.values(cov?.urls ?? {});
+  const indexed = inspected.filter((page) => page.verdict === 'PASS').length;
+  const notIndexed = inspected.filter((page) => page.verdict === 'NEUTRAL' || page.verdict === 'FAIL').length;
   const sitemapUrls = cov?.sitemap_urls ?? 0;
   const { verdict, reasons } = verdictOf({ impressions: week.impressions, prevImpressions: prev?.impressions ?? null, clicks: week.clicks, sitemapUrls, indexed, notIndexed, missing });
-  const top = Object.values((truth?.rows ?? []).reduce((m, r) => { const q = (m[r.query] ??= { query: r.query, impressions: 0, clicks: 0 }); q.impressions += r.impressions; q.clicks += r.clicks; return m; }, {}))
+  const top = Object.values((truth?.rows ?? []).reduce((m, r) => { const q = (m[r.query] ??= { query: r.query, impressions: 0, clicks: 0 }); q.impressions += r.impressions; q.clicks += r.clicks; return m; }, Object.create(null)))
     .sort((a, b) => b.impressions - a.impressions).slice(0, 10);
   return {
     schema_version: '1.0', domain: DOMAIN, generated_at: new Date().toISOString(),
@@ -64,7 +65,7 @@ export function build() {
     week_over_week: prev ? { impressions_change_pct: pct(week.impressions, prev.impressions), clicks_change_pct: pct(week.clicks, prev.clicks) } : { note: 'no full prior week recorded: nothing to compare with' },
     coverage: { sitemap_urls: sitemapUrls, indexed, not_indexed: notIndexed, states, collected_at: cov?.generated_at ?? null },
     top_queries_28d: top, verdict, reasons,
-    summary: missing.length ? `RED: nothing read (${missing.join(', ')} missing).` : `${verdict.toUpperCase()}: ${week.impressions} impressions and ${week.clicks} clicks in ${week.start}..${week.end}, ${indexed} of ${sitemapUrls} sitemap URLs indexed.`,
+    summary: missing.length ? `RED: nothing read (${missing.join(', ')} missing).` : `${verdict.toUpperCase()}: ${week.days ? `${week.impressions} impressions and ${week.clicks} clicks in ${week.start}..${week.end}` : 'Search Console returned no daily activity rows'}, ${indexed} of ${sitemapUrls} sitemap URLs indexed.`,
   };
 }
 

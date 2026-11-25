@@ -1,0 +1,19 @@
+{
+ "schema": "wa-gsc-truth-v1",
+ "site": "https://whisperalmanac.com",
+ "property": "sc-domain:whisperalmanac.com",
+ "window": {
+  "start": "2026-10-26",
+  "end": "2026-11-22"
+ },
+ "generated_at": "2026-11-25T06:12:38.446Z",
+ "totals": {
+  "rows": 0,
+  "clicks": 0,
+  "impressions": 0,
+  "queries": 0,
+  "pages": 0
+ },
+ "by_date": [],
+ "rows": []
+}

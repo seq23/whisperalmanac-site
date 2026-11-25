@@ -1,7 +1,7 @@
 name: Search Console daily
 
 # Daily (Search Readiness e4, e5, i6): writes gsc_truth.json (query x page, rolling 28 days, plus
-# daily totals), gsc_query_history.json and index_coverage.json (URL Inspection, 150 URLs a day)
+# daily totals), gsc_query_history.json, index_coverage.json (150 URLs a day) and gsc_sitemaps.json
 # into data/search-console/ with scripts/search-console.mjs, and commits them to main.
 # A missing secret or property is a NAMED STOP that turns the run red.
 on:

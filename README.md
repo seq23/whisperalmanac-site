@@ -9,7 +9,7 @@ Shared look: `public/site.css` (brand fonts self-hosted in `public/fonts/`, OFL 
 Identity: `config/entity.json` is the one definition (name, logo, sameAs, parent Spry Labs); the validator holds every page's Organization JSON-LD to it.
 
 Workflows beside CI:
-- `search-console-daily.yml` (daily): `scripts/search-console.mjs` writes `data/search-console/` (gsc_truth.json, gsc_query_history.json, index_coverage.json) and commits it. Needs the `GSC_SERVICE_ACCOUNT_JSON` Actions secret and the site's Search Console property shared with that account; until then it stops red with a NAMED STOP.
+- `search-console-daily.yml` (daily): `scripts/search-console.mjs` writes and commits query truth, query history, URL inspection coverage and sitemap submission status under `data/search-console/`. The workflow uses the `GSC_SERVICE_ACCOUNT_JSON` Actions secret for the service account that has access to the site's Search Console property.
 - `post-deploy-live-check.yml` (after each push to main, and daily): `scripts/live-check.mjs` waits for the deploy, then reads what the edge serves.
 - `weekly-outcome-report.yml` (Mondays): `scripts/weekly-outcome-report.mjs`, week over week from `data/search-console/`, with one self-closing issue while the site is red.
 - Nothing paid: `config/llm_routing.json`, `scripts/lib/llm-router.mjs`, `docs/cost/zero-paid-llm.md`.

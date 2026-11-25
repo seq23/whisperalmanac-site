@@ -1,0 +1,25 @@
+{
+ "schema": "wa-index-coverage-v1",
+ "site": "https://whisperalmanac.com",
+ "urls": {
+  "https://whisperalmanac.com/privacy/": {
+   "verdict": "NEUTRAL",
+   "state": "Discovered - currently not indexed",
+   "last_crawl": null,
+   "inspected_at": "2026-11-25T06:12:38.446Z"
+  },
+  "https://whisperalmanac.com/": {
+   "verdict": "NEUTRAL",
+   "state": "Discovered - currently not indexed",
+   "last_crawl": null,
+   "inspected_at": "2026-11-25T06:12:38.446Z"
+  }
+ },
+ "property": "sc-domain:whisperalmanac.com",
+ "generated_at": "2026-11-25T06:12:38.446Z",
+ "sitemap_urls": 2,
+ "inspected": 2,
+ "states": {
+  "Discovered - currently not indexed": 2
+ }
+}
