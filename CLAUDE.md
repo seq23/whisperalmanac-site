@@ -5,7 +5,8 @@ redirect Worker (`src/index.js`). How it deploys and what each workflow does: `R
 
 - Fast check (CI runs exactly this): `node scripts/validate-site.mjs && node --test test/*.test.mjs`
 - Identity: `config/entity.json` is the one definition. Every page's Organization JSON-LD must match it,
-  and the validator fails if one drifts.
+  and the validator fails if one drifts. Add a new profile to `profiles_pending`; the weekly
+  `entity-backlink-watch.yml` promotes it into sameAs (and every page) once it resolves.
 - Nothing paid. No paid model, API or service. Any model call goes through `scripts/lib/llm-router.mjs`
   and only the `:free` models in `config/llm_routing.json` (`docs/cost/zero-paid-llm.md`).
   `test/zero-paid.test.mjs` enforces it.

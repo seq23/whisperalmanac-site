@@ -12,6 +12,7 @@ Workflows beside CI:
 - `search-console-daily.yml` (daily): `scripts/search-console.mjs` writes `data/search-console/` (gsc_truth.json, gsc_query_history.json, index_coverage.json) and commits it. Needs the `GSC_SERVICE_ACCOUNT_JSON` Actions secret and the site's Search Console property shared with that account; until then it stops red with a NAMED STOP.
 - `post-deploy-live-check.yml` (after each push to main, and daily): `scripts/live-check.mjs` waits for the deploy, then reads what the edge serves.
 - `weekly-outcome-report.yml` (Mondays): `scripts/weekly-outcome-report.mjs`, week over week from `data/search-console/`, with one self-closing issue while the site is red.
+- `entity-backlink-watch.yml` (Wednesdays, and when the identity changes on main): `scripts/entity-backlink-watch.mjs --apply` fetches every sameAs and pending profile in `config/entity.json`, drops one dead two runs running, promotes a pending one that resolves, rewrites every page's Organization JSON-LD to match, and lands `reports/entity/backlink_watch.json`. A profile that does not link back is a NAMED STOP in the job summary. A self-heal reaches the edge on the next deploy.
 - Nothing paid: `config/llm_routing.json`, `scripts/lib/llm-router.mjs`, `docs/cost/zero-paid-llm.md`.
 
 IndexNow: the key is `public/<key>.txt` (its body is its own name). `.github/workflows/indexnow.yml` runs `scripts/indexnow-ping.mjs` on every push to main: it waits until the live site serves that commit, then pings the changed pages.
